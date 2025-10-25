@@ -8,22 +8,31 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { callGamesByDate } from "../ApiScripts";
+import { getAllGames } from "../BackendApi";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navagation/types";
 import { getAllFavTeamInfo, logDatabaseContents } from "../../database/db";
 import { useFocusEffect } from "@react-navigation/native";
 
-interface Game {
+interface BackendGame {
+  id: number;
+  season: number;
+  team: string;
+  opponent: string;
+  date: string;
+}
+
+interface DisplayGame {
   id: string;
   date: Date;
-  homeTeam: { name: string; nickname: string; logo: string };
-  awayTeam: { name: string; nickname: string; logo: string };
+  team: string;
+  opponent: string;
+  season: number;
 }
 
 const UpcomingGames = () => {
   const navigation = useNavigation<NavigationProp<RootStackParamList>>();
-  const [games, setGames] = useState<Game[]>([]);
+  const [games, setGames] = useState<DisplayGame[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [userName, setUserName] = useState<string | null>(null);
 
@@ -52,49 +61,56 @@ const UpcomingGames = () => {
 
       // Fetch favorite teams directly from the database using the username
       const favTeams = await getAllFavTeamInfo(userName);
-      const favTeamNames = favTeams.map((team) => team[0]);
+      const favTeamNames = favTeams.map((team) => team[1]); // team[1] is the team name
+      console.log("Favorite team names:", favTeamNames);
+      
       if (favTeamNames.length === 0) {
         console.warn("No favorite teams found.");
         setGames([]);
         return;
       }
 
-      // Get current date and calculate the end date (14 days ahead)
+      // Fetch all games from backend
+      console.log("📡 Fetching all games from backend...");
+      const allBackendGames: BackendGame[] = await getAllGames();
+      
+      if (!allBackendGames || allBackendGames.length === 0) {
+        console.warn("No games received from backend.");
+        setGames([]);
+        return;
+      }
+
+      console.log(`📡 Total games received: ${allBackendGames.length}`);
+
+      // Filter games for favorite teams and upcoming dates
       const currentDate = new Date();
       const endDate = new Date(currentDate);
       endDate.setDate(currentDate.getDate() + 14);
+      
+      const upcomingGames = allBackendGames
+        .filter((game) => {
+          // Check if either team or opponent is in favorites
+          const gameDate = new Date(game.date);
+          const isTeamFavorite = favTeamNames.includes(game.team);
+          const isOpponentFavorite = favTeamNames.includes(game.opponent);
+          const isUpcoming = gameDate >= currentDate && gameDate <= endDate;
+          
+          return (isTeamFavorite || isOpponentFavorite) && isUpcoming;
+        })
+        .map((game) => ({
+          id: game.id.toString(),
+          date: new Date(game.date),
+          team: game.team,
+          opponent: game.opponent,
+          season: game.season,
+        }));
 
-      const startDateString = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      const endDateString = endDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
-      console.log(
-        "Fetching games from:",
-        startDateString,
-        "to:",
-        endDateString
-      );
- 
-      // Fetch games for each of the selected teams using callGamesByDate
-      let allGames: Game[] = [];
-      for (const teamID of favTeamNames) {
-        console.log(`📡 Fetching games for team: ${teamID}`);
-        const teamGames = await callGamesByDate(
-          startDateString,
-          endDateString,
-          teamID
-        );
-
-        if (teamGames.length === 0) {
-          console.warn(`No games found for team ${teamID}`);
-        } else {
-          allGames = [...allGames, ...teamGames];
-        }
+      console.log(`📡 Upcoming games for favorites: ${upcomingGames.length}`);
+      setGames(upcomingGames);
+      
+      if (upcomingGames.length === 0) {
+        console.warn("No upcoming games found for favorite teams.");
       }
-
-      if (allGames.length === 0) {
-        console.warn("No upcoming games found.");
-      }
-      setGames(allGames);
     } catch (error) {
       console.error("Error fetching games:", error);
     } finally {
@@ -130,31 +146,25 @@ const UpcomingGames = () => {
           data={games}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => {
-            const isHomeTeam = item.homeTeam.name === "The home team from list";
-            const winRate = isHomeTeam ? 0.51 : 0.49;
+            // Simple win rate calculation based on random factors for demo
+            const winRate = Math.random() * 0.3 + 0.35; // Random between 35% and 65%
 
             return (
               <View style={styles.gameItem}>
-                {/* Logos */}
-                <View style={styles.teamLogoContainer}>
-                  <Image
-                    source={{ uri: item.homeTeam.logo }}
-                    style={styles.teamLogo}
-                  />
+                <View style={styles.teamContainer}>
                   <Text style={styles.teamText}>
-                    {item.homeTeam.name} vs {item.awayTeam.name}
+                    {item.team} vs {item.opponent}
                   </Text>
-                  <Image
-                    source={{ uri: item.awayTeam.logo }}
-                    style={styles.teamLogo}
-                  />
                 </View>
 
                 <Text style={styles.dateText}>
                   {item.date.toLocaleDateString()}
                 </Text>
+                <Text style={styles.seasonText}>
+                  Season: {item.season}
+                </Text>
                 <Text style={styles.winRateText}>
-                  Win Rate: {winRate * 100}%
+                  Win Rate: {(winRate * 100).toFixed(1)}%
                 </Text>
               </View>
             );
@@ -172,9 +182,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   title: {
-    fontSize: 22, // Adjusted font size for better fit
+    fontSize: 22,
     fontWeight: "bold",
-    marginBottom: 12, // Reduced margin for better fit on smaller screens
+    marginBottom: 12,
     textAlign: "center",
   },
   loader: {
@@ -188,36 +198,38 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   gameItem: {
-    padding: 12,
+    padding: 16,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
     marginBottom: 12,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+  },
+  teamContainer: {
+    marginBottom: 8,
   },
   teamText: {
-    fontSize: 16, 
-    textAlign: "center", 
-  },
-  dateText: {
-    fontSize: 14, 
-    color: "#666",
-    textAlign: "center", 
-  },
-  winRateText: {
-    fontSize: 14, 
-    color: "#4CAF50",
-    marginTop: 6, 
+    fontSize: 18,
+    fontWeight: "bold",
     textAlign: "center",
   },
-  teamLogoContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center", 
-    marginBottom: 8,  
+  dateText: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 4,
   },
-  teamLogo: {
-    width: 30,
-    height: 30,
-    marginHorizontal: 8,
+  seasonText: {
+    fontSize: 12,
+    color: "#888",
+    textAlign: "center",
+    marginBottom: 4,
+  },
+  winRateText: {
+    fontSize: 14,
+    color: "#4CAF50",
+    textAlign: "center",
+    fontWeight: "600",
   },
 });
 export default UpcomingGames;
