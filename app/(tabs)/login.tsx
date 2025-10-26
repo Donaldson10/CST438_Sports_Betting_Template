@@ -8,19 +8,19 @@ import {
   Alert,
   ImageBackground,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
-import { useNavigation, NavigationProp } from "@react-navigation/native";
-import { RootStackParamList } from "../navigation/types";
-import loginPic from "../../assets/images/loginPic2.jpg";
+import { router } from "expo-router";
 import { verifyUserLogin, getUserID, initializeDatabase } from "../../database/db";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import AuthService from "../services/AuthService";
 
 export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [dbInitialized, setDbInitialized] = useState(false);
-  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
+  const [oauthLoading, setOauthLoading] = useState(false);
 
   useEffect(() => {
     const initializeDb = async () => {
@@ -57,7 +57,7 @@ export default function LoginScreen() {
           Alert.alert("Welcome", "You are now logged in!");
 
           setTimeout(() => {
-            navigation.navigate("favoriteTeams", { username }); // Pass username via favoriteTeams
+            router.push("/favoriteTeams"); // Navigate to favorite teams
           }, 500);
         } else {
           Alert.alert("Error", "User not found.");
@@ -72,33 +72,70 @@ export default function LoginScreen() {
     }
   };
 
+  // OAuth2 Google Login
+  const handleOAuthLogin = async () => {
+    setOauthLoading(true);
+    
+    try {
+      const result = await AuthService.loginWithGoogle();
+      
+      if (result.success) {
+        Alert.alert("Welcome", `Hello ${result.userInfo?.name}! You are now logged in with OAuth2!`);
+        
+        // Store user info
+        await AsyncStorage.setItem("username", result.userInfo?.email || "user");
+        
+        setTimeout(() => {
+          router.push("/favoriteTeams");
+        }, 500);
+      } else {
+        Alert.alert("Login Failed", result.error || "OAuth login failed");
+      }
+    } catch (error) {
+      console.error("OAuth login error:", error);
+      Alert.alert("Error", "An error occurred during OAuth login");
+    } finally {
+      setOauthLoading(false);
+    }
+  };
+
   if (!dbInitialized) {
     return <ActivityIndicator size="large" color="#0000ff" />;
   }
 
   return (
-    <ImageBackground source={loginPic} style={styles.backgroundImage}>
-      <View style={styles.container}>
-        <TextInput
-          style={styles.input}
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        {loading ? (
-          <ActivityIndicator size="large" color="#0000ff" />
-        ) : (
-          <Button title="Login" onPress={handleLogin} />
-        )}
-      </View>
-    </ImageBackground>
+    <View style={styles.container}>
+      <Text style={styles.title}>Sports Betting App</Text>
+      
+      {oauthLoading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <TouchableOpacity style={styles.googleButton} onPress={handleOAuthLogin}>
+          <Text style={styles.googleButtonText}>Login with Google</Text>
+        </TouchableOpacity>
+      )}
+      
+      <Text style={styles.orText}>or</Text>
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <Button title="Login" onPress={handleLogin} />
+      )}
+    </View>
   );
 }
 
@@ -108,6 +145,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     padding: 20,
+    backgroundColor: "#fff",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  googleButton: {
+    backgroundColor: "#4285f4",
+    padding: 15,
+    borderRadius: 5,
+    marginBottom: 20,
+    width: "80%",
+    alignItems: "center",
+  },
+  googleButtonText: {
+    color: "white",
+    fontSize: 16,
+  },
+  orText: {
+    fontSize: 16,
+    marginVertical: 15,
+    textAlign: "center",
   },
   input: {
     borderWidth: 1,
@@ -115,12 +176,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 15,
     borderRadius: 5,
-    backgroundColor: "#fff",
     width: "80%",
-  },
-  backgroundImage: {
-    flex: 1,
-    width: "100%",
-    justifyContent: "center",
   },
 });

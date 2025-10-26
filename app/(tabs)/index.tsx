@@ -27,7 +27,7 @@ const Index = () => {
 
   // Function to navigate to the login screen
   const handleLogin = () => {
-    router.push("/login");
+    router.push("/(tabs)/login");
   };
 
   // Function to navigate to the account creation screen

@@ -5,9 +5,12 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "gambleapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "extra": {
+      "googleClientId": "965757428397-0qptrjl7r6q4427ur966okjn79erlvde.apps.googleusercontent.com"
+    },
     "ios": {
       "supportsTablet": true
     },

@@ -70,17 +70,11 @@ const UpcomingGames = () => {
         return;
       }
 
-      // Fetch all games from backend
-      console.log("📡 Fetching all games from backend...");
+      // Get games from backend
+      console.log("getting games from backend...");
       const allBackendGames: BackendGame[] = await getAllGames();
-      
-      if (!allBackendGames || allBackendGames.length === 0) {
-        console.warn("No games received from backend.");
-        setGames([]);
-        return;
-      }
 
-      console.log(`📡 Total games received: ${allBackendGames.length}`);
+      console.log(`Total games: ${allBackendGames.length}`);
 
       // Filter games for favorite teams and upcoming dates
       const currentDate = new Date();
@@ -105,7 +99,7 @@ const UpcomingGames = () => {
           season: game.season,
         }));
 
-      console.log(`📡 Upcoming games for favorites: ${upcomingGames.length}`);
+      console.log(`Upcoming games for favorites: ${upcomingGames.length}`);
       setGames(upcomingGames);
       
       if (upcomingGames.length === 0) {
@@ -146,8 +140,8 @@ const UpcomingGames = () => {
           data={games}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => {
-            // Simple win rate calculation based on random factors for demo
-            const winRate = Math.random() * 0.3 + 0.35; // Random between 35% and 65%
+            // Simple win rate calculation for demo
+            const winRate = 0.5; // 50% default win rate
 
             return (
               <View style={styles.gameItem}>

@@ -8,9 +8,8 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
-import { callTeams } from "../ApiScripts";
-import { useRoute, RouteProp } from "@react-navigation/native";
-import { RootStackParamList } from "../navagation/types";
+import { getAllTeams } from "../BackendApi";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   addTeamToFavs,
   removeTeamFromFav,
@@ -18,6 +17,16 @@ import {
   logDatabaseContents,
 } from "../../database/db";
 
+// Backend Team interface based on Spring Boot entity
+interface BackendTeam {
+  id: number;
+  name: string;
+  city?: string;
+  conference?: string;
+  division?: string;
+}
+
+// Keep compatibility with existing UI
 interface Team {
   id: string;
   name: string;
@@ -26,18 +35,21 @@ interface Team {
 }
 
 const FavoriteTeams = () => {
-  const route = useRoute<RouteProp<RootStackParamList, "favoriteTeams">>();
-  const username = route.params?.username; // Get username from navigation params
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
     const initialize = async () => {
-      if (!username) {
-        console.error("No username received via navigation");
+      // Get username from AsyncStorage
+      const storedUsername = await AsyncStorage.getItem('username');
+      if (!storedUsername) {
+        console.error("No username found in storage");
+        setLoading(false);
         return;
       }
+      setUsername(storedUsername);
 
       setLoading(true);
 
@@ -45,13 +57,19 @@ const FavoriteTeams = () => {
         const favTeams = await getFavTeamNames(username);
         setSelectedTeams(favTeams || []);
 
-        process.env.RAPIDAPI_KEY = "f48a5921f5msh580809ba8c9e6cfp181a8ajsn545d715d6844";
-        const teamData = await callTeams();
-
-        if (teamData && teamData.length > 0) {
-          setTeams(teamData);
-        } else {
-          console.error("No teams received from API.");
+        // Fetch teams from backend API
+        const backendTeams = await getAllTeams();
+        
+        if (backendTeams && backendTeams.length > 0) {
+          // Convert backend team format to frontend team format
+          const formattedTeams: Team[] = backendTeams.map((backendTeam: BackendTeam) => ({
+            id: backendTeam.id.toString(),
+            name: backendTeam.name,
+            nickname: backendTeam.city || backendTeam.name,
+            logo: "https://via.placeholder.com/40",
+          }));
+          setTeams(formattedTeams);
+          console.log("Teams loaded from backend:", formattedTeams.length);
         }
       } catch (error) {
         console.error("Error fetching teams:", error);
@@ -61,10 +79,13 @@ const FavoriteTeams = () => {
     };
 
     initialize();
-  }, [username]);
+  }, []); // Run once on mount
 
   const toggleTeamSelection = async (team_name: string) => {
-    if (!username) return;
+    if (!username) {
+      console.error("No username available for team selection");
+      return;
+    }
 
     let updatedTeams = [...selectedTeams];
 
@@ -87,8 +108,10 @@ const FavoriteTeams = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Select Your Favorite Teams</Text>
-      {teams.length === 0 ? (
-        <Text style={styles.errorText}>No teams available. Check API Key.</Text>
+      {!username ? (
+        <Text style={styles.errorText}>Please log in to select favorite teams.</Text>
+      ) : teams.length === 0 ? (
+        <Text style={styles.errorText}>No teams available. Check backend connection.</Text>
       ) : (
         <FlatList
           data={teams}
