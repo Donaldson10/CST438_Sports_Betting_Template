@@ -49,7 +49,8 @@ export async function initializeDatabase() {
             INSERT OR IGNORE INTO user (username, password)
             VALUES 
             ("testUser1", "1234"),
-            ("testUser2", "1234");
+            ("testUser2", "1234"),
+            ("admin", "admin123");
         `);
 
         // Insert test data into team table
