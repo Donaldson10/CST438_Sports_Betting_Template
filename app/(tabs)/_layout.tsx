@@ -31,14 +31,12 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="about"
+        name="login"
         options={{
-          title: "About",
+          title: "Login",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={
-                focused ? "information-circle" : "information-circle-outline"
-              }
+              name={focused ? "key" : "key-outline"}
               color={color}
               size={24}
             />
@@ -46,14 +44,38 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="login"
+        name="favoriteTeams"
         options={{
-          title: "Login",
+          title: "Favorite Teams",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={
-                focused ? "key" : "key"
-              }
+              name={focused ? "heart" : "heart-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="UpcomingGames"
+        options={{
+          title: "Upcoming Games",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "basketball" : "basketball-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="logout"
+        options={{
+          title: "Logout",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "log-out" : "log-out-outline"}
               color={color}
               size={24}
             />
