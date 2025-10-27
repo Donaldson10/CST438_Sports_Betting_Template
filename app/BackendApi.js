@@ -2,6 +2,10 @@ const BASE_URL = "https://project2-438-backend-c8e29941b290.herokuapp.com";
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// API Endpoints:
+// Public (no auth): /teams, /games  
+// Authenticated (Bearer token): /api/teams, /api/games, /api/favorites
+
 export const callBackendAPI = async (endpoint, setJsonResponse, method = 'GET', body = null) => {
   try {
     const url = `${BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
@@ -107,14 +111,51 @@ export const getFavorites = async () => {
   }
 };
 
+// Example authenticated API functions (require Bearer token)
+export const getAuthenticatedTeams = async () => {
+  try {
+    const token = await AsyncStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No access token found');
+      return [];
+    }
+    
+    const response = await fetch(`${BASE_URL}/api/teams`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.ok ? await response.json() : [];
+  } catch (error) {
+    console.error("Error fetching authenticated teams:", error);
+    return [];
+  }
+};
+
 export const addFavorite = async (userId, teamId, gameId) => {
   try {
+    const token = await AsyncStorage.getItem('accessToken');
+    if (!token) {
+      console.error('No access token found');
+      return null;
+    }
+    
     const params = new URLSearchParams();
     if (userId) params.append('userId', userId);
     if (teamId) params.append('teamId', teamId);
     if (gameId) params.append('gameId', gameId);
     
-    return await callBackendAPI(`/api/favorites?${params.toString()}`, null, 'POST');
+    const response = await fetch(`${BASE_URL}/api/favorites?${params.toString()}`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    return response.ok ? await response.json() : null;
   } catch (error) {
     console.error("Error adding favorite:", error);
     return null;
