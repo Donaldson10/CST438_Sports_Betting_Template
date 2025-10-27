@@ -8,9 +8,8 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { getTeams } from "../SimpleApi";
-import { useRoute, RouteProp } from "@react-navigation/native";
-import { RootStackParamList } from "../navagation/types";
 import {
   addTeamToFavs,
   removeTeamFromFav,
@@ -26,26 +25,43 @@ interface Team {
 }
 
 const FavoriteTeams = () => {
-  const route = useRoute<RouteProp<RootStackParamList, "favoriteTeams">>();
-  const username = route.params?.username; // Get username from navigation params
+  const [username, setUsername] = useState<string | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Fetch username from AsyncStorage on component mount
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const storedUserName = await AsyncStorage.getItem("username");
+      if (storedUserName) {
+        setUsername(storedUserName);
+        console.log("Teams tab - Fetched Username:", storedUserName);
+      } else {
+        console.warn("⚠ Teams tab - No username found in AsyncStorage");
+      }
+    };
+    fetchUserName();
+  }, []);
+
+  // Initialize teams and favorites when username is available
   useEffect(() => {
     const initialize = async () => {
       if (!username) {
-        console.error("No username received via navigation");
-        return;
+        return; // Wait for username to be loaded
       }
 
       setLoading(true);
 
       try {
+        console.log("🏀 Teams tab - Loading teams and favorites...");
+        
+        // Load user's favorite teams
         const favTeams = await getFavTeamNames(username);
         setSelectedTeams(favTeams || []);
+        console.log(`Teams tab - User ${username} has ${favTeams?.length || 0} favorite teams`);
 
-        // Use backend teams API instead of external RapidAPI
+        // Load all teams from backend API
         const teamData = await getTeams();
 
         if (teamData && teamData.length > 0) {
@@ -57,11 +73,12 @@ const FavoriteTeams = () => {
             logo: team.logo || "https://via.placeholder.com/40"
           }));
           setTeams(formattedTeams);
+          console.log(`Teams tab - Loaded ${formattedTeams.length} teams from backend`);
         } else {
-          console.error("No teams received from backend API.");
+          console.error("Teams tab - No teams received from backend API.");
         }
       } catch (error) {
-        console.error("Error fetching teams:", error);
+        console.error("Teams tab - Error fetching teams:", error);
       }
 
       setLoading(false);
@@ -89,6 +106,16 @@ const FavoriteTeams = () => {
 
   if (loading) {
     return <ActivityIndicator style={styles.loader} size="large" color="#0000ff" />;
+  }
+
+  // Show login prompt if no username is available
+  if (!username) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Favorite Teams</Text>
+        <Text style={styles.errorText}>Please log in to select your favorite teams.</Text>
+      </View>
+    );
   }
 
   return (
