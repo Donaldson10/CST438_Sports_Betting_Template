@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Image,
 } from "react-native";
-import { callTeams } from "../ApiScripts";
+import { getTeams } from "../SimpleApi";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navagation/types";
 import {
@@ -45,13 +45,20 @@ const FavoriteTeams = () => {
         const favTeams = await getFavTeamNames(username);
         setSelectedTeams(favTeams || []);
 
-        process.env.RAPIDAPI_KEY = "f48a5921f5msh580809ba8c9e6cfp181a8ajsn545d715d6844";
-        const teamData = await callTeams();
+        // Use backend teams API instead of external RapidAPI
+        const teamData = await getTeams();
 
         if (teamData && teamData.length > 0) {
-          setTeams(teamData);
+          // Transform backend team data to match expected format
+          const formattedTeams = teamData.map((team: any) => ({
+            id: team.id.toString(),
+            name: team.name,
+            nickname: team.nickname || team.name,
+            logo: team.logo || "https://via.placeholder.com/40"
+          }));
+          setTeams(formattedTeams);
         } else {
-          console.error("No teams received from API.");
+          console.error("No teams received from backend API.");
         }
       } catch (error) {
         console.error("Error fetching teams:", error);
@@ -88,7 +95,7 @@ const FavoriteTeams = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Select Your Favorite Teams</Text>
       {teams.length === 0 ? (
-        <Text style={styles.errorText}>No teams available. Check API Key.</Text>
+        <Text style={styles.errorText}>No teams available. Check your connection.</Text>
       ) : (
         <FlatList
           data={teams}

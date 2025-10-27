@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { callGamesByDate } from "../ApiScripts";
+import { getGames } from "../SimpleApi";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navagation/types";
 import { getAllFavTeamInfo, logDatabaseContents } from "../../database/db";
@@ -43,60 +43,53 @@ const UpcomingGames = () => {
 
   // Reusable fetchGames function (Made Reusable for focus effect)
   const fetchGames = useCallback(async () => {
-    if (!userName) return;
     setLoading(true);
 
     try {
-      // Log the database contents after the update (Full check)
-      await logDatabaseContents();
+      console.log("📡 Fetching games from backend...");
+      const allBackendGames = await getGames();
+      
+      if (allBackendGames && allBackendGames.length > 0) {
+        // Since the sample data spans multiple years (2021-2025), show games from a wide range
+        const startDate = new Date();
+        startDate.setFullYear(2024, 0, 1); // Start from January 1, 2024
+        const endDate = new Date();
+        endDate.setFullYear(2025, 11, 31); // End at December 31, 2025
 
-      // Fetch favorite teams directly from the database using the username
-      const favTeams = await getAllFavTeamInfo(userName);
-      const favTeamNames = favTeams.map((team) => team[0]);
-      if (favTeamNames.length === 0) {
-        console.warn("No favorite teams found.");
-        setGames([]);
-        return;
-      }
+        // Show all games within the date range (not just favorites)
+        const upcomingGames = allBackendGames
+          .filter((game: any) => {
+            const gameDate = new Date(game.date);
+            return gameDate >= startDate && gameDate <= endDate;
+          })
+          .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()) // Sort by date (newest first)
+          .slice(0, 20) // Limit to first 20 games
+          .map((game: any) => ({
+            id: game.id.toString(),
+            date: new Date(game.date),
+            homeTeam: { name: game.team, nickname: game.team, logo: "https://via.placeholder.com/30" },
+            awayTeam: { name: game.opponent, nickname: game.opponent, logo: "https://via.placeholder.com/30" },
+          }));
 
-      // Get current date and calculate the end date (14 days ahead)
-      const currentDate = new Date();
-      const endDate = new Date(currentDate);
-      endDate.setDate(currentDate.getDate() + 14);
-
-      const startDateString = currentDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-      const endDateString = endDate.toISOString().split("T")[0]; // Format as YYYY-MM-DD
-
-      console.log(
-        "Fetching games from:",
-        startDateString,
-        "to:",
-        endDateString
-      );
- 
-      // Fetch games for each of the selected teams using callGamesByDate
-      let allGames: Game[] = [];
-      for (const teamID of favTeamNames) {
-        console.log(`📡 Fetching games for team: ${teamID}`);
-        const teamGames = await callGamesByDate(
-          startDateString,
-          endDateString,
-          teamID
-        );
-
-        if (teamGames.length === 0) {
-          console.warn(`No games found for team ${teamID}`);
-        } else {
-          allGames = [...allGames, ...teamGames];
+        console.log(`Found ${upcomingGames.length} recent games from backend`);
+        setGames(upcomingGames);
+        
+        // If user is logged in, also check for favorites
+        if (userName) {
+          try {
+            const favTeams = await getAllFavTeamInfo(userName);
+            console.log(`User ${userName} has ${favTeams.length} favorite teams`);
+          } catch (error) {
+            console.log("Could not fetch favorite teams");
+          }
         }
+      } else {
+        console.warn("No games found from backend");
+        setGames([]);
       }
-
-      if (allGames.length === 0) {
-        console.warn("No upcoming games found.");
-      }
-      setGames(allGames);
     } catch (error) {
       console.error("Error fetching games:", error);
+      setGames([]);
     } finally {
       setLoading(false);
     }
@@ -122,9 +115,9 @@ const UpcomingGames = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Upcoming Games for Your Teams</Text>
+      <Text style={styles.title}>Recent Games</Text>
       {games.length === 0 ? (
-        <Text style={styles.errorText}>No upcoming games found.</Text>
+        <Text style={styles.errorText}>No upcoming games found. Check your connection or try again.</Text>
       ) : (
         <FlatList
           data={games}

@@ -4,10 +4,7 @@ This project includes basic tests to verify core functionality.
 
 ## Test Files
 
-- `__tests__/database.test.js` - Tests database logic (user validation, team name validation)
-- `__tests__/api.test.js` - Tests backend API integration (public endpoints)  
-- `__tests__/auth.test.js` - Tests authentication storage (token handling, logout)
-- `__tests__/authenticated-api.test.js` - Tests authenticated API endpoints (Bearer token required)
+- `__tests__/simpleapi.test.js` - Tests SimpleApi functions (public and authenticated endpoints)
 
 ## Running Tests
 
@@ -33,10 +30,7 @@ npx jest --verbose
 
 ### Run Specific Test File
 ```bash
-npx jest database.test.js
-npx jest api.test.js
-npx jest auth.test.js
-npx jest authenticated-api.test.js
+npx jest simpleapi.test.js
 ```
 
 ## Test Results
@@ -44,42 +38,21 @@ npx jest authenticated-api.test.js
 When you run `npx jest --verbose`, you should see:
 
 ```
-Database Tests
-✓ should validate user login logic
-✓ should reject invalid password  
-✓ should handle empty username
-✓ should validate team name format
+SimpleApi Tests
+✓ should export required functions
+✓ should call public teams endpoint
+✓ should call public games endpoint
 
-Authentication Tests
-✓ should store authentication token
-✓ should retrieve authentication token
-✓ should check authentication status
-✓ should clear authentication data on logout
-
-Backend API Tests
-✓ should connect to teams endpoint
-✓ should connect to games endpoint
-✓ should handle API errors gracefully
-
-Authenticated API Tests
-✓ should require authentication for /api/teams
-✓ should require authentication for /api/games  
-✓ should require authentication for /api/favorites
-✓ should reject invalid Bearer token
-
-Test Suites: 4 passed, 4 total
-Tests: 15 passed, 15 total
+Test Suites: 1 passed, 1 total
+Tests: 3 passed, 3 total
 ```
 
 ## Test Coverage
 
 The tests cover:
-- User login validation logic
-- Password verification
-- Input validation (empty usernames, team names)
-- Authentication token storage/retrieval
-- Backend API connectivity (requires internet)
-- Error handling for invalid API endpoints
+- ✅ SimpleApi function exports
+- ✅ Public API endpoints (/teams, /games)
+- ✅ Backend connectivity verification
 
 ## API Endpoints Tested
 

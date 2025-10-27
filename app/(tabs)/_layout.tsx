@@ -1,5 +1,4 @@
 import { Tabs } from "expo-router";
-
 import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function TabLayout() {
@@ -31,14 +30,25 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="about"
+        name="UpcomingGames"
         options={{
-          title: "About",
+          title: "Games",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={
-                focused ? "information-circle" : "information-circle-outline"
-              }
+              name={focused ? "football" : "football-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="favoriteTeams"
+        options={{
+          title: "Teams",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "star" : "star-outline"}
               color={color}
               size={24}
             />
@@ -51,9 +61,33 @@ export default function TabLayout() {
           title: "Login",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={
-                focused ? "key" : "key"
-              }
+              name={focused ? "key" : "key-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="admin"
+        options={{
+          title: "Admin",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "settings" : "settings-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="logout"
+        options={{
+          title: "Logout",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "log-out" : "log-out-outline"}
               color={color}
               size={24}
             />
