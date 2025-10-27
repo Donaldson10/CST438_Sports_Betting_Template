@@ -34,6 +34,7 @@ describe('Backend API Tests', () => {
   test('should handle API errors gracefully', async () => {
     const response = await fetch('https://project2-438-backend-c8e29941b290.herokuapp.com/nonexistent');
     
-    expect(response.status).toBe(404);
+    // Backend returns 401 for non-existent endpoints (due to security config)
+    expect(response.status).toBe(401);
   });
 });
