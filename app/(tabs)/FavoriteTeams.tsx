@@ -9,7 +9,7 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getTeams } from "../SimpleApi";
+import { getTeams } from "../../utils/SimpleApi";
 import {
   addTeamToFavs,
   removeTeamFromFav,
@@ -88,20 +88,33 @@ const FavoriteTeams = () => {
   }, [username]);
 
   const toggleTeamSelection = async (team_name: string) => {
-    if (!username) return;
-
-    let updatedTeams = [...selectedTeams];
-
-    if (updatedTeams.includes(team_name)) {
-      await removeTeamFromFav(username, team_name);
-      updatedTeams = updatedTeams.filter((name) => name !== team_name);
-    } else {
-      await addTeamToFavs(username, team_name);
-      updatedTeams.push(team_name);
+    if (!username) {
+      console.error("❌ No username available for team selection");
+      return;
     }
 
-    setSelectedTeams(updatedTeams);
-    await logDatabaseContents();
+    try {
+      let updatedTeams = [...selectedTeams];
+
+      if (updatedTeams.includes(team_name)) {
+        console.log(`🔄 Removing ${team_name} from favorites...`);
+        await removeTeamFromFav(username, team_name);
+        updatedTeams = updatedTeams.filter((name) => name !== team_name);
+        console.log(`✅ ${team_name} removed from favorites`);
+      } else {
+        console.log(`🔄 Adding ${team_name} to favorites...`);
+        await addTeamToFavs(username, team_name);
+        updatedTeams.push(team_name);
+        console.log(`✅ ${team_name} added to favorites`);
+      }
+
+      setSelectedTeams(updatedTeams);
+      await logDatabaseContents();
+    } catch (error) {
+      console.error(`❌ Failed to toggle team selection for ${team_name}:`, error);
+      // You could show an alert to the user here
+      // Alert.alert("Error", `Failed to update ${team_name}. Please try again.`);
+    }
   };
 
   if (loading) {

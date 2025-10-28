@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
-import { getAuthTeams, getFavorites, addFavorite } from '../SimpleApi';
+import { getAuthTeams, getFavorites } from '../../utils/SimpleApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function AuthDemo() {
@@ -74,13 +74,8 @@ export default function AuthDemo() {
     setData('Adding test favorite...');
 
     try {
-      const result = await addFavorite(token, 1, 1, 1);
-      
-      if (result) {
-        setData(`✅ Favorite added!\n\nResponse:\n${JSON.stringify(result, null, 2)}`);
-      } else {
-        setData('❌ Failed to add favorite');
-      }
+      // Note: addFavorite function not implemented in SimpleApi
+      setData('❌ AddFavorite function not available in current API');
     } catch (error) {
       setData(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }

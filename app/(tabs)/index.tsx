@@ -59,7 +59,7 @@ const Index = () => {
   return (
     <View style={styles.container}>
       <View style={styles.imageContainer}>
-        <Image source={require("../../assets/images/loginPic.jpg")} style={styles.image} resizeMode="cover" />
+        <Image source={require("../../assets/images/loginPic.jpg")} style={styles.image} contentFit="cover" />
       </View>
       <View style={styles.footerContainer}>
         <Button theme="primary" label="Login" onPress={handleLogin} />

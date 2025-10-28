@@ -8,7 +8,7 @@ import {
   Image,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getGames } from "../SimpleApi";
+import { getGames } from "../../utils/SimpleApi";
 import { useNavigation, NavigationProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navagation/types";
 import { getAllFavTeamInfo, logDatabaseContents } from "../../database/db";

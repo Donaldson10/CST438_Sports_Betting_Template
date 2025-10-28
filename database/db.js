@@ -231,17 +231,26 @@ export async function insertTeam([team_id, team_name, nickname, logo_url]) {
 
 // Add a team to a user's favorites
 export async function addTeamToFavs(username, team_name) {
-    const userID = await getUserID(username);
-    const teamID = await getTeamID(team_name);
+    try {
+        const userID = await getUserID(username);
+        const teamID = await getTeamID(team_name);
 
-    console.log(userID);
+        console.log(`Adding team to favorites - UserID: ${userID}, TeamID: ${teamID}, Team: ${team_name}`);
 
-    if (userID && teamID) {
-        await db.runAsync(
-            `INSERT INTO favorite (team_id, user_id) VALUES (?, ?);`,
-            teamID,
-            userID
-        );
+        if (userID && teamID) {
+            await db.runAsync(
+                `INSERT INTO favorite (team_id, user_id) VALUES (?, ?);`,
+                teamID,
+                userID
+            );
+            console.log(`✅ Successfully added ${team_name} to favorites for ${username}`);
+        } else {
+            console.error(`❌ Failed to add team to favorites - Missing IDs: UserID: ${userID}, TeamID: ${teamID}`);
+            throw new Error(`Failed to add team: ${team_name}. User or team not found.`);
+        }
+    } catch (error) {
+        console.error(`❌ Error adding team ${team_name} to favorites:`, error);
+        throw error;
     }
 }
 
@@ -300,15 +309,26 @@ export async function getTeamID(team_name) {
 
 // Remove selected team from favorites 
 export async function removeTeamFromFav(username, team_name) {
-    const user_id = await getUserID(username);
-    const team_id = await getTeamID(team_name);
+    try {
+        const user_id = await getUserID(username);
+        const team_id = await getTeamID(team_name);
 
-    if (user_id && team_id) {
-        await db.runAsync(
-            `DELETE FROM favorite WHERE user_id = ? AND team_id = ?;`,
-            user_id,
-            team_id
-        );
+        console.log(`Removing team from favorites - UserID: ${user_id}, TeamID: ${team_id}, Team: ${team_name}`);
+
+        if (user_id && team_id) {
+            await db.runAsync(
+                `DELETE FROM favorite WHERE user_id = ? AND team_id = ?;`,
+                user_id,
+                team_id
+            );
+            console.log(`✅ Successfully removed ${team_name} from favorites for ${username}`);
+        } else {
+            console.error(`❌ Failed to remove team from favorites - Missing IDs: UserID: ${user_id}, TeamID: ${team_id}`);
+            throw new Error(`Failed to remove team: ${team_name}. User or team not found.`);
+        }
+    } catch (error) {
+        console.error(`❌ Error removing team ${team_name} from favorites:`, error);
+        throw error;
     }
 }
 // Wipe user favorites

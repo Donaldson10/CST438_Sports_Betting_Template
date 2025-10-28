@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
-import { getTeams, getGames, getAuthTeams, getAuthGames } from '../SimpleApi';
+import { getTeams, getGames, getAuthTeams, getAuthGames } from '../../utils/SimpleApi';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ApiComparison = () => {

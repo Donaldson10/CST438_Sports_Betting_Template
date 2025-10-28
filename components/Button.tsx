@@ -8,6 +8,8 @@ type Props = {
 };
 
 export default function Button({ label, theme, onPress }: Props) {
+  // Debug log to check what's being passed as label
+  console.log('Button label:', label, 'Type:', typeof label);
 
   if (theme === 'primary') {
     return (

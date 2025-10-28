@@ -1,7 +1,7 @@
 // Simple test for authenticated API functions
 describe('SimpleApi Tests', () => {
   test('should export required functions', () => {
-    const api = require('../app/SimpleApi');
+    const api = require('../utils/SimpleApi');
     
     expect(typeof api.callAPI).toBe('function');
     expect(typeof api.getTeams).toBe('function');
@@ -13,7 +13,7 @@ describe('SimpleApi Tests', () => {
   });
 
   test('should call public teams endpoint', async () => {
-    const { getTeams } = require('../app/SimpleApi');
+    const { getTeams } = require('../utils/SimpleApi');
     
     const teams = await getTeams();
     
@@ -25,7 +25,7 @@ describe('SimpleApi Tests', () => {
   });
 
   test('should call public games endpoint', async () => {
-    const { getGames } = require('../app/SimpleApi');
+    const { getGames } = require('../utils/SimpleApi');
     
     const games = await getGames();
     
