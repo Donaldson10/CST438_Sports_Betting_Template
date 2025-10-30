@@ -43,6 +43,20 @@ export async function verifyUserLogin(username, password) {
     }
 }
 
+export async function getUserID(username) {
+    await initializeDatabase();
+    try {
+        const user = await db.getFirstAsync(
+            'SELECT id FROM user WHERE username = ?', 
+            [username]
+        );
+        return user ? user.id : null;
+    } catch (error) {
+        console.error("Error getting user ID:", error);
+        return null;
+    }
+}
+
 export async function addTeamToFavs(username, teamName) {
     await initializeDatabase();
     try {
