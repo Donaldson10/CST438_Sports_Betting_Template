@@ -50,6 +50,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "react-native-webview": "13.12.5",
+    "react-native-worklets-core": "^1.6.2",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

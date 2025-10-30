@@ -78,8 +78,10 @@ const UpcomingGames = () => {
 
       // Filter games for favorite teams and upcoming dates
       const currentDate = new Date();
+      const startDate = new Date(currentDate);
+      startDate.setFullYear(currentDate.getFullYear() - 2); // Show games from 2 years ago
       const endDate = new Date(currentDate);
-      endDate.setDate(currentDate.getDate() + 14);
+      endDate.setFullYear(currentDate.getFullYear() + 2); // Show games up to 2 years ahead
       
       const upcomingGames = allBackendGames
         .filter((game) => {
@@ -87,9 +89,9 @@ const UpcomingGames = () => {
           const gameDate = new Date(game.date);
           const isTeamFavorite = favTeamNames.includes(game.team);
           const isOpponentFavorite = favTeamNames.includes(game.opponent);
-          const isUpcoming = gameDate >= currentDate && gameDate <= endDate;
+          const isInDateRange = gameDate >= startDate && gameDate <= endDate;
           
-          return (isTeamFavorite || isOpponentFavorite) && isUpcoming;
+          return (isTeamFavorite || isOpponentFavorite) && isInDateRange;
         })
         .map((game) => ({
           id: game.id.toString(),

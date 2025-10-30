@@ -107,6 +107,8 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Sports Betting App</Text>
       
+      {/* Temporarily disabled Google OAuth - uncomment below to re-enable */}
+      {/* 
       {oauthLoading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
@@ -116,6 +118,7 @@ export default function LoginScreen() {
       )}
       
       <Text style={styles.orText}>or</Text>
+      */}
       
       <TextInput
         style={styles.input}

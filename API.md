@@ -13,24 +13,40 @@ headers: {
 ```
 
 ## Public Endpoints (No Authentication Required)
+
+### Teams API
 - `GET /teams` - Get all teams
+- `GET /teams/{id}` - Get specific team by ID
+- `POST /teams` - Create new team
+- `PUT /teams/{id}` - Update existing team
+- `DELETE /teams/{id}` - Delete team
+
+### Games API
 - `GET /games` - Get all games
+- `GET /games/{id}` - Get specific game by ID
+- `GET /games/id/{id}` - Get game by ID (alternative endpoint)
+- `POST /games` - Create new game
+- `DELETE /games/{id}` - Delete game
+
+### User Authentication API (Expected)
+- `POST /api/users/register` - Register new user
+  ```json
+  {
+    "username": "string",
+    "email": "string",
+    "password": "string"
+  }
+  ```
+- `POST /api/users/login` - Login user
+  ```json
+  {
+    "username": "string",
+    "password": "string"
+  }
+  ```
+- `GET /api/users/check-username/{username}` - Check username availability
 
 ## Authenticated Endpoints (Require Bearer Token)
-
-### Teams API (`/api/teams`)
-- `GET /api/teams` - Get all teams
-- `GET /api/teams/{id}` - Get specific team by ID
-- `POST /api/teams` - Create new team
-- `PUT /api/teams/{id}` - Update existing team
-- `DELETE /api/teams/{id}` - Delete team
-
-### Games API (`/api/games`)
-- `GET /api/games` - Get all games
-- `GET /api/games/{id}` - Get specific game by ID
-- `POST /api/games` - Create new game
-- `PUT /api/games/{id}` - Update existing game
-- `DELETE /api/games/{id}` - Delete game
 
 ### Favorites API (`/api/favorites`)
 - `GET /api/favorites` - Get all favorites
@@ -73,4 +89,8 @@ headers: {
 ```
 
 ## Current Frontend Implementation
-The frontend currently uses the **public endpoints** (`/teams`, `/games`) for basic functionality. The authenticated endpoints (`/api/*`) are available for future features that require user-specific data or CRUD operations.
+The frontend uses:
+- **Public endpoints** (`/teams`, `/games`) for basic functionality
+- **User registration/login** for account management
+- **Authenticated endpoints** (`/api/favorites`) for user-specific data
+- **Google OAuth2** as an alternative login method

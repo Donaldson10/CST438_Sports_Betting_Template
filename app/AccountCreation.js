@@ -34,8 +34,8 @@ const AccountCreation = () => {
     }
 
     // Check if the username already exists in the database
-    const usernameExists = await isUsernameAvailable(username);
-    if (!usernameExists) {
+    const usernameAvail = await isUsernameAvailable(username);
+    if (!usernameAvail) {
       Alert.alert("Error", "Username already exists!");
       return;
     }
@@ -50,7 +50,7 @@ const AccountCreation = () => {
       // After successful account creation, navigate to the Login screen
       navigation.navigate("Login");
 
-      // Reset form fields (optional)
+      // Reset form fields
       setUsername("");
       setEmail("");
       setPassword("");
@@ -102,7 +102,6 @@ const AccountCreation = () => {
         />
 
         <Button title="Create Account" onPress={handleCreateAccount} />
-
 
         <View style={styles.footer}>
           <Text>Already have an account? </Text>

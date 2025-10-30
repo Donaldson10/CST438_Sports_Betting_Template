@@ -2,9 +2,10 @@ const BASE_URL = "https://project2-438-backend-c8e29941b290.herokuapp.com";
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// API Endpoints:
-// Public (no auth): /teams, /games  
-// Authenticated (Bearer token): /api/teams, /api/games, /api/favorites
+// API Endpoints based on your Spring Boot backend:
+// Games: /games (GET all, POST, DELETE/{id}, GET/{id})
+// Teams: /teams (GET all, POST, PUT/{id}, DELETE/{id}, GET/{id})
+// Favorites: /favorites (GET all, POST, PUT/{id}, DELETE/{id}, GET/user/{userId})
 
 export const callBackendAPI = async (endpoint, setJsonResponse, method = 'GET', body = null) => {
   try {
@@ -40,7 +41,18 @@ export const callBackendAPI = async (endpoint, setJsonResponse, method = 'GET', 
       console.error(`HTTP error! status: ${response.status} for URL: ${url}`);
       const errorText = await response.text();
       console.error('Error response:', errorText);
+      
+      // For 401 errors, provide more specific message
+      if (response.status === 401) {
+        console.error('Authentication required. Backend may need security configuration update.');
+      }
+      
       throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // For DELETE requests, just return success if status is OK
+    if (method === 'DELETE' && response.ok) {
+      return { success: true };
     }
     
     // For POST requests that might not return JSON
@@ -54,9 +66,15 @@ export const callBackendAPI = async (endpoint, setJsonResponse, method = 'GET', 
       }
     }
     
-    const json = await response.json();
-    if (setJsonResponse) setJsonResponse(json);
-    return json;
+    // Try to parse JSON response
+    try {
+      const json = await response.json();
+      if (setJsonResponse) setJsonResponse(json);
+      return json;
+    } catch (e) {
+      // If no JSON body, return success for successful responses
+      return response.ok ? { success: true } : null;
+    }
   } catch (error) {
     console.error("Error calling backend API:", error);
     if (setJsonResponse) setJsonResponse(null);
@@ -102,62 +120,126 @@ export const getTeamById = async (id) => {
 };
 
 // Add favorites API calls
-export const getFavorites = async () => {
+export const getAllFavorites = async () => {
   try {
-    return await callBackendAPI("/api/favorites");
+    return await callBackendAPI("/favorites");
   } catch (error) {
     console.error("Error fetching favorites:", error);
     return [];
   }
 };
 
-// Example authenticated API functions (require Bearer token)
-export const getAuthenticatedTeams = async () => {
+export const getFavoritesByUser = async (userId) => {
   try {
-    const token = await AsyncStorage.getItem('accessToken');
-    if (!token) {
-      console.error('No access token found');
-      return [];
-    }
-    
-    const response = await fetch(`${BASE_URL}/api/teams`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    return response.ok ? await response.json() : [];
+    return await callBackendAPI(`/favorites/user/${userId}`);
   } catch (error) {
-    console.error("Error fetching authenticated teams:", error);
+    console.error(`Error fetching favorites for user ${userId}:`, error);
     return [];
   }
 };
 
-export const addFavorite = async (userId, teamId, gameId) => {
+export const addFavorite = async (favorite) => {
   try {
-    const token = await AsyncStorage.getItem('accessToken');
-    if (!token) {
-      console.error('No access token found');
-      return null;
-    }
-    
-    const params = new URLSearchParams();
-    if (userId) params.append('userId', userId);
-    if (teamId) params.append('teamId', teamId);
-    if (gameId) params.append('gameId', gameId);
-    
-    const response = await fetch(`${BASE_URL}/api/favorites?${params.toString()}`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
-    
-    return response.ok ? await response.json() : null;
+    // favorite should be an object like: { userId: 1, teamId: 2, gameId: 3 }
+    return await callBackendAPI("/favorites", null, 'POST', favorite);
   } catch (error) {
     console.error("Error adding favorite:", error);
+    return null;
+  }
+};
+
+export const addFavoriteByGame = async (gameId, favorite) => {
+  try {
+    // favorite should be an object like: { userId: 1, teamId: 2 }
+    return await callBackendAPI(`/favorites/game/${gameId}`, null, 'POST', favorite);
+  } catch (error) {
+    console.error("Error adding favorite by game:", error);
+    return null;
+  }
+};
+
+export const updateFavorite = async (id, favorite) => {
+  try {
+    return await callBackendAPI(`/favorites/${id}`, null, 'PUT', favorite);
+  } catch (error) {
+    console.error(`Error updating favorite ${id}:`, error);
+    return null;
+  }
+};
+
+export const updateFavoriteByUserAndTeam = async (userId, teamId, favorite) => {
+  try {
+    return await callBackendAPI(`/favorites/user/${userId}/team/${teamId}`, null, 'PUT', favorite);
+  } catch (error) {
+    console.error(`Error updating favorite for user ${userId} and team ${teamId}:`, error);
+    return null;
+  }
+};
+
+export const deleteFavorite = async (id) => {
+  try {
+    return await callBackendAPI(`/favorites/${id}`, null, 'DELETE');
+  } catch (error) {
+    console.error(`Error deleting favorite ${id}:`, error);
+    return null;
+  }
+};
+
+export const deleteFavoriteByUserAndTeam = async (userId, teamId) => {
+  try {
+    return await callBackendAPI(`/favorites/user/${userId}/team/${teamId}`, null, 'DELETE');
+  } catch (error) {
+    console.error(`Error deleting favorite for user ${userId} and team ${teamId}:`, error);
+    return null;
+  }
+};
+
+// Create a new game
+export const createGame = async (game) => {
+  try {
+    return await callBackendAPI("/games", null, 'POST', game);
+  } catch (error) {
+    console.error("Error creating game:", error);
+    return null;
+  }
+};
+
+// Delete a game
+export const deleteGame = async (id) => {
+  try {
+    return await callBackendAPI(`/games/${id}`, null, 'DELETE');
+  } catch (error) {
+    console.error(`Error deleting game ${id}:`, error);
+    return null;
+  }
+};
+
+// Create a new team
+export const createTeam = async (team) => {
+  try {
+    return await callBackendAPI("/teams", null, 'POST', team);
+  } catch (error) {
+    console.error("Error creating team:", error);
+    return null;
+  }
+};
+
+// Update a team
+export const updateTeam = async (id, team) => {
+  try {
+    return await callBackendAPI(`/teams/${id}`, null, 'PUT', team);
+  } catch (error) {
+    console.error(`Error updating team ${id}:`, error);
+    return null;
+  }
+};
+
+// Delete a team
+export const deleteTeam = async (id) => {
+  try {
+    return await callBackendAPI(`/teams/${id}`, null, 'DELETE');
+  } catch (error) {
+    console.error(`Error deleting team ${id}:`, error);
     return null;
   }
 };

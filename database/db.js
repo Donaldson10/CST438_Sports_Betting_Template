@@ -43,6 +43,20 @@ export async function verifyUserLogin(username, password) {
     }
 }
 
+export async function getUserID(username) {
+    await initializeDatabase();
+    try {
+        const user = await db.getFirstAsync(
+            'SELECT id FROM user WHERE username = ?', 
+            [username]
+        );
+        return user ? user.id : null;
+    } catch (error) {
+        console.error("Error getting user ID:", error);
+        return null;
+    }
+}
+
 export async function addTeamToFavs(username, teamName) {
     await initializeDatabase();
     try {
@@ -104,6 +118,17 @@ export async function getAllFavTeamInfo(username) {
         return [];
     } catch (error) {
         return [];
+    }
+}
+
+export async function isUsernameAvailable(username) {
+    await initializeDatabase();
+    try {
+        const user = await db.getFirstAsync('SELECT id FROM user WHERE username = ?', [username]);
+        return !user; // Returns true if username is available (user doesn't exist)
+    } catch (error) {
+        console.error("Error checking username availability:", error);
+        return false;
     }
 }
 
