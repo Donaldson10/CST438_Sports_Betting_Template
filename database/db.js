@@ -107,6 +107,17 @@ export async function getAllFavTeamInfo(username) {
     }
 }
 
+export async function isUsernameAvailable(username) {
+    await initializeDatabase();
+    try {
+        const user = await db.getFirstAsync('SELECT id FROM user WHERE username = ?', [username]);
+        return !user; // Returns true if username is available (user doesn't exist)
+    } catch (error) {
+        console.error("Error checking username availability:", error);
+        return false;
+    }
+}
+
 export async function logDatabaseContents() {
     // Simple logging for debugging
 }
