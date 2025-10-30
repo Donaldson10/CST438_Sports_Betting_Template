@@ -70,6 +70,19 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="manageGames"
+        options={{
+          title: "Manage Games",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? "settings" : "settings-outline"}
+              color={color}
+              size={24}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="logout"
         options={{
           title: "Logout",

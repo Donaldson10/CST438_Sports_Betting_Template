@@ -41,7 +41,18 @@ export const callBackendAPI = async (endpoint, setJsonResponse, method = 'GET', 
       console.error(`HTTP error! status: ${response.status} for URL: ${url}`);
       const errorText = await response.text();
       console.error('Error response:', errorText);
+      
+      // For 401 errors, provide more specific message
+      if (response.status === 401) {
+        console.error('Authentication required. Backend may need security configuration update.');
+      }
+      
       throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // For DELETE requests, just return success if status is OK
+    if (method === 'DELETE' && response.ok) {
+      return { success: true };
     }
     
     // For POST requests that might not return JSON
@@ -55,9 +66,15 @@ export const callBackendAPI = async (endpoint, setJsonResponse, method = 'GET', 
       }
     }
     
-    const json = await response.json();
-    if (setJsonResponse) setJsonResponse(json);
-    return json;
+    // Try to parse JSON response
+    try {
+      const json = await response.json();
+      if (setJsonResponse) setJsonResponse(json);
+      return json;
+    } catch (e) {
+      // If no JSON body, return success for successful responses
+      return response.ok ? { success: true } : null;
+    }
   } catch (error) {
     console.error("Error calling backend API:", error);
     if (setJsonResponse) setJsonResponse(null);
